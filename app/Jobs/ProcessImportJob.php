@@ -34,13 +34,6 @@ class ProcessImportJob implements ShouldQueue
      */
     public function handle(): void
     {
-        logger()->info(
-            'handle:' . PHP_EOL . json_encode(
-                $this->offers,
-                JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
-            )
-        );
-
         $import = Import::find($this->importId);
         if (! $import) {
             Log::error("ProcessImportJob: Import #{$this->importId} not found.");
@@ -72,13 +65,6 @@ class ProcessImportJob implements ShouldQueue
                             'city' => $offerData['property_city'],
                         ]);
                     }
-
-                    logger()->info(
-                        'Import offers debug:' . PHP_EOL . json_encode(
-                            $offerData,
-                            JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
-                        )
-                    );
 
                     Offer::updateOrCreate(
                         [

@@ -34,13 +34,6 @@ class ImportController extends Controller
             ->where('external_import_id', $validated['external_import_id'])
             ->first();
 
-        logger()->info(
-            'store:' . PHP_EOL . json_encode(
-                $existingImport,
-                JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
-            )
-        );
-
         if ($existingImport) {
             return (new ImportResource($existingImport))
                 ->additional(['meta' => ['idempotent_replay' => true]])
