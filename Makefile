@@ -5,11 +5,13 @@
 DC = docker compose
 APP = $(DC) exec app
 
-# Cross-platform helper for copying .env if it does not exist
+# Cross-platform helpers
 ifeq ($(OS),Windows_NT)
 CP_ENV = if not exist .env copy .env.example .env
+HELP_CMD = powershell -NoProfile -Command "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; Get-Content -Encoding UTF8 $(MAKEFILE_LIST) | Select-String '^[a-zA-Z_-]+:.*?\x23\x23 ' | ForEach-Object { $$p = $$_.Line -split ':\s*\x23\x23\s*'; Write-Host ('  ' + $$p[0].PadRight(15)) -NoNewline -ForegroundColor Cyan; Write-Host (' ' + $$p[1]) }"
 else
 CP_ENV = test -f .env || cp .env.example .env
+HELP_CMD = grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
 endif
 
 .DEFAULT_GOAL := help
@@ -18,7 +20,7 @@ endif
 
 help: ## Відобразити список доступних команд / Show help message
 	@echo "Price Watcher Makefile commands:"
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
+	@$(HELP_CMD)
 
 # ------------------------------------------------------------------------------
 # Встановлення та ініціалізація / Installation & Initialization
