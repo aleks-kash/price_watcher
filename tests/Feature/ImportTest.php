@@ -9,12 +9,28 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
+/**
+ * Feature tests for offer import ingestion, idempotency, queue dispatch, and status tracking.
+ *
+ * Covers:
+ * - POST /api/imports (submission, schema validation, idempotency handling)
+ * - ProcessImportJob (background queue execution, property and offer upserts)
+ * - GET /api/imports/{id} (status and progress metrics)
+ */
 class ImportTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * Test supplier instance used across test cases.
+     *
+     * @var Supplier
+     */
     private Supplier $supplier;
 
+    /**
+     * Set up the test environment and create a test supplier.
+     */
     protected function setUp(): void
     {
         parent::setUp();
@@ -25,6 +41,9 @@ class ImportTest extends TestCase
         ]);
     }
 
+    /**
+     * Test that a valid import payload creates a pending import and pushes ProcessImportJob.
+     */
     public function test_successful_import_creation_and_queue_dispatch(): void
     {
         Queue::fake();
@@ -70,6 +89,9 @@ class ImportTest extends TestCase
         });
     }
 
+    /**
+     * Test that re-submitting an existing import returns HTTP 200 with idempotent_replay flag.
+     */
     public function test_idempotency_handling_of_duplicate_imports(): void
     {
         Queue::fake();
@@ -110,6 +132,9 @@ class ImportTest extends TestCase
         $this->assertDatabaseCount('imports', 1);
     }
 
+    /**
+     * Test that executing ProcessImportJob creates properties and offers and completes the import.
+     */
     public function test_import_job_execution_populates_properties_and_offers(): void
     {
         $import = Import::factory()->create([
@@ -175,6 +200,9 @@ class ImportTest extends TestCase
         ]);
     }
 
+    /**
+     * Test that the GET /api/imports/{id} endpoint returns metrics and current status.
+     */
     public function test_import_show_endpoint_returns_metrics(): void
     {
         $import = Import::factory()->create([
@@ -195,6 +223,9 @@ class ImportTest extends TestCase
             ->assertJsonPath('data.progress_percentage', 100);
     }
 
+    /**
+     * Test that import submission fails validation if the supplier code does not exist.
+     */
     public function test_import_validation_fails_for_unknown_supplier(): void
     {
         $payload = [

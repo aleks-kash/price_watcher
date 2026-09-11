@@ -9,14 +9,36 @@ use App\Models\Supplier;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
+/**
+ * Feature tests for property search and lowest-price offer aggregation.
+ *
+ * Covers:
+ * - GET /api/properties (search filters, window function lowest price calculation)
+ * - Date filtering, guest capacity filtering, city filtering
+ * - Exclusion of sold-out and expired offers
+ * - Query parameter validation
+ */
 class PropertySearchTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * Test supplier instance used for seeding test offers.
+     *
+     * @var Supplier
+     */
     private Supplier $supplier;
 
+    /**
+     * Test import batch instance linked to seeded offers.
+     *
+     * @var Import
+     */
     private Import $import;
 
+    /**
+     * Set up the test environment with a test supplier and import record.
+     */
     protected function setUp(): void
     {
         parent::setUp();
@@ -25,6 +47,9 @@ class PropertySearchTest extends TestCase
         $this->import = Import::factory()->create(['supplier_id' => $this->supplier->id]);
     }
 
+    /**
+     * Test that property search selects the lowest-priced offer among competing offers.
+     */
     public function test_returns_cheapest_offer_for_property(): void
     {
         $property = Property::factory()->create([
@@ -68,6 +93,9 @@ class PropertySearchTest extends TestCase
             ->assertJsonPath('data.0.best_offer.price', 85);
     }
 
+    /**
+     * Test that only offers matching the exact check-in and check-out dates are returned.
+     */
     public function test_filters_by_exact_dates(): void
     {
         $property = Property::factory()->create(['city' => 'Kyiv']);
@@ -91,6 +119,9 @@ class PropertySearchTest extends TestCase
             ->assertJsonCount(0, 'data');
     }
 
+    /**
+     * Test that offers accommodating fewer guests than requested are filtered out.
+     */
     public function test_filters_by_guests_capacity(): void
     {
         $property = Property::factory()->create(['city' => 'Kyiv']);
@@ -115,6 +146,9 @@ class PropertySearchTest extends TestCase
             ->assertJsonCount(0, 'data');
     }
 
+    /**
+     * Test that offers with 0 available units are excluded from search results.
+     */
     public function test_excludes_sold_out_offers(): void
     {
         $property = Property::factory()->create(['city' => 'Kyiv']);
@@ -135,6 +169,9 @@ class PropertySearchTest extends TestCase
             ->assertJsonCount(0, 'data');
     }
 
+    /**
+     * Test that offers with an expired timestamp are excluded from search results.
+     */
     public function test_excludes_expired_offers(): void
     {
         $property = Property::factory()->create(['city' => 'Kyiv']);
@@ -155,6 +192,9 @@ class PropertySearchTest extends TestCase
             ->assertJsonCount(0, 'data');
     }
 
+    /**
+     * Test that search results are filtered by property city.
+     */
     public function test_filters_by_city(): void
     {
         $propertyKyiv = Property::factory()->create(['city' => 'Kyiv']);
@@ -189,6 +229,9 @@ class PropertySearchTest extends TestCase
             ->assertJsonPath('data.0.id', $propertyKyiv->id);
     }
 
+    /**
+     * Test that property search fails validation if check_in or check_out dates are missing.
+     */
     public function test_search_validation_requires_dates(): void
     {
         $response = $this->getJson('/api/properties');

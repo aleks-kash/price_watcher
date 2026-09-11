@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
+ * API Resource for serializing an import batch with computed progress metrics.
+ *
  * @mixin Import
  */
 class ImportResource extends JsonResource
@@ -14,7 +16,21 @@ class ImportResource extends JsonResource
     /**
      * Transform the resource into an array.
      *
-     * @return array<string, mixed>
+     * @param  Request  $request
+     * @return array{
+     *     id: int,
+     *     supplier_code: string|null,
+     *     external_import_id: string,
+     *     sent_at: string|null,
+     *     status: string,
+     *     total_offers: int,
+     *     processed_offers: int,
+     *     progress_percentage: float,
+     *     error: string|null,
+     *     completed_at: string|null,
+     *     created_at: string|null,
+     *     updated_at: string|null
+     * }
      */
     public function toArray(Request $request): array
     {

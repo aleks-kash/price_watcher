@@ -9,6 +9,12 @@ use App\Models\Property;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Controller for searching accommodation properties and finding cheapest available offers.
+ *
+ * Employs MySQL 8 SQL window functions (ROW_NUMBER) to offload deduplication and sorting
+ * to the database layer.
+ */
 class PropertyController extends Controller
 {
     /**
@@ -17,6 +23,9 @@ class PropertyController extends Controller
      * Performs database-level window function aggregation to find the cheapest
      * active offer per property matching exact dates, capacity, positive available units,
      * unexpired offers, and optional city filter.
+     *
+     * @param  SearchPropertiesRequest  $request  Validated query parameters
+     * @return AnonymousResourceCollection Paginated collection of properties with best offers
      *
      * @response 200 {"data": [{"id": 1, "code": "hotel-kyiv-1", "name": "Hotel Kyiv", "city": "Kyiv", "best_offer": {"id": 2, "price": 95.0}}]}
      */

@@ -11,18 +11,51 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
+/**
+ * Asynchronous job to process an imported batch of supplier offers.
+ *
+ * Handles background ingestion of property offers:
+ * - Marks the import batch as processing.
+ * - Executes in a database transaction for consistency.
+ * - Upserts properties by code and updates their metadata.
+ * - Upserts supplier offers by composite key (supplier_id, external_id).
+ * - Updates import metrics, status (completed/failed), and completion timestamp.
+ */
 class ProcessImportJob implements ShouldQueue
 {
     use Queueable;
 
+    /**
+     * The number of times the queued job may be attempted.
+     *
+     * @var int
+     */
     public int $tries = 3;
 
+    /**
+     * The maximum number of seconds the job can run before timing out.
+     *
+     * @var int
+     */
     public int $timeout = 180;
 
     /**
      * Create a new job instance.
      *
-     * @param  array<int, array<string, mixed>>  $offers
+     * @param  int  $importId  ID of the Import model being processed
+     * @param  array<int, array{
+     *     external_id: string,
+     *     property_code: string,
+     *     property_name: string,
+     *     property_city: string,
+     *     check_in: string,
+     *     check_out: string,
+     *     max_guests: int|string,
+     *     price: float|string,
+     *     currency: string,
+     *     available_units: int|string,
+     *     expires_at: string
+     * }>  $offers  List of raw offer payloads to ingest
      */
     public function __construct(
         public int $importId,
@@ -30,7 +63,9 @@ class ProcessImportJob implements ShouldQueue
     ) {}
 
     /**
-     * Execute the job.
+     * Execute the job: process property and offer upserts inside a database transaction.
+     *
+     * @throws \Throwable If an error occurs during processing
      */
     public function handle(): void
     {

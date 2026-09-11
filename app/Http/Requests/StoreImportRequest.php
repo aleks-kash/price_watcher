@@ -5,10 +5,32 @@ namespace App\Http\Requests;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Request validation for ingesting an asynchronous batch of supplier offers.
+ *
+ * @property-read string $supplier_code Unique supplier code (must exist in suppliers table)
+ * @property-read string $external_import_id Unique import batch reference from external supplier
+ * @property-read string $sent_at Timestamp when the supplier sent the payload
+ * @property-read array<int, array{
+ *     external_id: string,
+ *     property_code: string,
+ *     property_name: string,
+ *     property_city: string,
+ *     check_in: string,
+ *     check_out: string,
+ *     max_guests: int|string,
+ *     price: float|string,
+ *     currency: string,
+ *     available_units: int|string,
+ *     expires_at: string
+ * }> $offers Array of property offers to import
+ */
 class StoreImportRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
+     *
+     * @return bool
      */
     public function authorize(): bool
     {
@@ -18,7 +40,7 @@ class StoreImportRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, ValidationRule|array<mixed>|string>
+     * @return array<string, list<ValidationRule|string>>
      */
     public function rules(): array
     {

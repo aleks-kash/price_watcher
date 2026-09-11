@@ -11,6 +11,11 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 
+/**
+ * Controller for handling external supplier offer imports and progress polling.
+ *
+ * Implements asynchronous background queuing with Redis and idempotency protection.
+ */
 class ImportController extends Controller
 {
     /**
@@ -19,6 +24,9 @@ class ImportController extends Controller
      * Asynchronously ingests supplier offers with idempotency protection.
      * If the import with the same supplier and external_import_id already exists,
      * the existing import status is returned without re-processing.
+     *
+     * @param  StoreImportRequest  $request  Validated import payload
+     * @return JsonResponse HTTP 202 Accepted (new import) or HTTP 200 OK (idempotent replay)
      *
      * @response 202 {"data": {"id": 1, "status": "pending", "total_offers": 10}}
      * @response 200 {"data": {"id": 1, "status": "completed", "total_offers": 10}}
@@ -61,6 +69,9 @@ class ImportController extends Controller
      * Get import status and progress metrics.
      *
      * Returns the current processing state, metrics, and completion timestamp.
+     *
+     * @param  Import  $import  The import model instance resolved via route model binding
+     * @return ImportResource Serialized import metrics and progress
      */
     public function show(Import $import): ImportResource
     {

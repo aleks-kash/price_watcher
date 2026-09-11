@@ -10,6 +10,12 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response;
 
+/**
+ * Controller for managing accommodation offer reservations.
+ *
+ * Implements concurrency-safe booking using pessimistic locking (FOR UPDATE) inside
+ * database transactions to prevent overselling and race conditions.
+ */
 class ReservationController extends Controller
 {
     /**
@@ -18,6 +24,10 @@ class ReservationController extends Controller
      * Uses pessimistic row-level locking (SELECT ... FOR UPDATE) inside a database
      * transaction to ensure atomic unit decrement and prevent race conditions or
      * double-booking of remaining units.
+     *
+     * @param  StoreReservationRequest  $request  Validated booking details
+     * @param  Offer  $offer  The offer model instance resolved via route model binding
+     * @return JsonResponse HTTP 201 Created with the reservation details
      *
      * @response 201 {"data": {"id": 1, "client_reference": "ref-123", "customer_name": "John Doe"}}
      * @response 409 {"message": "No units are available for the selected offer."}

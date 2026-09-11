@@ -9,12 +9,24 @@ use App\Models\Supplier;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
+ * Factory for creating Offer model instances with test data.
+ *
  * @extends Factory<Offer>
  */
 class OfferFactory extends Factory
 {
+    /**
+     * The name of the factory's corresponding model.
+     *
+     * @var class-string<Offer>
+     */
     protected $model = Offer::class;
 
+    /**
+     * Define the model's default state.
+     *
+     * @return array<string, mixed>
+     */
     public function definition(): array
     {
         return [
@@ -32,6 +44,11 @@ class OfferFactory extends Factory
         ];
     }
 
+    /**
+     * Indicate that the offer has already expired.
+     *
+     * @return static
+     */
     public function expired(): static
     {
         return $this->state(fn (array $attributes) => [
@@ -39,6 +56,11 @@ class OfferFactory extends Factory
         ]);
     }
 
+    /**
+     * Indicate that the offer is sold out (zero units remaining).
+     *
+     * @return static
+     */
     public function soldOut(): static
     {
         return $this->state(fn (array $attributes) => [

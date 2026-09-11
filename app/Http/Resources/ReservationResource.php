@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
+ * API Resource for serializing a booking reservation and its remaining offer capacity.
+ *
  * @mixin Reservation
  */
 class ReservationResource extends JsonResource
@@ -14,7 +16,23 @@ class ReservationResource extends JsonResource
     /**
      * Transform the resource into an array.
      *
-     * @return array<string, mixed>
+     * @param  Request  $request
+     * @return array{
+     *     id: int,
+     *     offer_id: int,
+     *     client_reference: string,
+     *     customer_name: string,
+     *     customer_email: string,
+     *     created_at: string|null,
+     *     offer: array{
+     *         external_id: string|null,
+     *         price: float,
+     *         currency: string|null,
+     *         check_in: string|null,
+     *         check_out: string|null,
+     *         remaining_units: int
+     *     }
+     * }
      */
     public function toArray(Request $request): array
     {

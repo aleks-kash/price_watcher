@@ -8,12 +8,30 @@ use App\Models\Supplier;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
+/**
+ * Feature tests for offer reservations and inventory locking.
+ *
+ * Covers:
+ * - POST /api/offers/{offer}/reservations (booking creation, unit decrement)
+ * - Concurrency protection: zero-unit rejection (409 Conflict)
+ * - Expiration protection: expired offer rejection (422 Unprocessable)
+ * - Idempotency: duplicate client reference rejection
+ * - Prevention of overselling / race conditions on final unit
+ */
 class ReservationTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * Test offer instance used for reservation attempts.
+     *
+     * @var Offer
+     */
     private Offer $offer;
 
+    /**
+     * Set up the test environment with an active offer with inventory.
+     */
     protected function setUp(): void
     {
         parent::setUp();
@@ -31,6 +49,9 @@ class ReservationTest extends TestCase
         ]);
     }
 
+    /**
+     * Test that creating a reservation decrements available units and persists the record.
+     */
     public function test_successful_reservation_decrements_available_units(): void
     {
         $payload = [
@@ -55,6 +76,9 @@ class ReservationTest extends TestCase
         $this->assertEquals(1, $this->offer->available_units);
     }
 
+    /**
+     * Test that attempting to reserve an offer with 0 units returns HTTP 409 Conflict.
+     */
     public function test_cannot_reserve_when_units_are_zero(): void
     {
         $this->offer->update(['available_units' => 0]);
@@ -74,6 +98,9 @@ class ReservationTest extends TestCase
         ]);
     }
 
+    /**
+     * Test that attempting to reserve an expired offer returns HTTP 422 Unprocessable Content.
+     */
     public function test_cannot_reserve_expired_offer(): void
     {
         $this->offer->update(['expires_at' => now()->subMinute()]);
@@ -93,6 +120,9 @@ class ReservationTest extends TestCase
         ]);
     }
 
+    /**
+     * Test that submitting a reservation with an existing client reference fails validation.
+     */
     public function test_duplicate_client_reference_rejected(): void
     {
         $payload = [
@@ -111,6 +141,9 @@ class ReservationTest extends TestCase
             ->assertJsonValidationErrors(['client_reference']);
     }
 
+    /**
+     * Test that reserving the last available unit prevents subsequent requests from overbooking.
+     */
     public function test_last_unit_exhaustion_prevents_overbooking(): void
     {
         // Offer with only 1 unit

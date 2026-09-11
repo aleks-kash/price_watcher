@@ -8,12 +8,16 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 /**
+ * Factory for creating User model instances with test data.
+ *
  * @extends Factory<User>
  */
 class UserFactory extends Factory
 {
     /**
      * The current password being used by the factory.
+     *
+     * @var string|null
      */
     protected static ?string $password;
 

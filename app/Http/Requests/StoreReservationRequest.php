@@ -5,10 +5,19 @@ namespace App\Http\Requests;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Request validation for creating a customer reservation on an offer.
+ *
+ * @property-read string $client_reference Unique client reservation reference for idempotency
+ * @property-read string $customer_name Full name of the customer booking the reservation
+ * @property-read string $customer_email Email address of the customer
+ */
 class StoreReservationRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
+     *
+     * @return bool
      */
     public function authorize(): bool
     {
@@ -18,7 +27,7 @@ class StoreReservationRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, ValidationRule|array<mixed>|string>
+     * @return array<string, list<ValidationRule|string>>
      */
     public function rules(): array
     {
